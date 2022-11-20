@@ -3,18 +3,17 @@ USE PayRollGo;
 
 CREATE TABLE Employee 
 (
-	employeeID BIGINT NOT NULL UNSIGNED AUTO_INCREMENT,
-	taxBracket DECIMAL(3,2) NOT NULL,
+	employeeID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	taxBracket DECIMAL(3,2) UNSIGNED NOT NULL CHECK (taxBracket in (0.10,0.12,0.22,0.24,0.32,0.35,0.37)),
 	nameFirst VARCHAR(30) NOT NULL,
 	nameLast VARCHAR(30) NOT NULL,
-	hoursWorked SMALLINT NOT NULL UNSIGNED,
-	hourlyWage SMALLINT NOT NULL UNSIGNED,
-	phoneNumber CHAR(9),
-    balance DEC(8,2) NOT NULL,
+	hoursWorked SMALLINT UNSIGNED NOT NULL,
+	hourlyWage DECIMAL(5,2) UNSIGNED NOT NULL,
+	phoneNumber CHAR(10),
+    balance DECIMAL(8,2) NOT NULL,
     nameBank VARCHAR(50) NOT NULL,
     routingNumber CHAR(14) NOT NULL,
 	address VARCHAR(255) NOT NULL,
-    CHECK (taxBracket in (0.10,0.12,0.22,0.24,0.32,0.35,0.37)),
 	PRIMARY KEY (employeeID)
 );
 
