@@ -6,7 +6,7 @@ CREATE TABLE Employee
 	nameLast VARCHAR(20) NOT NULL,
 	hoursWorked SMALLINT NOT NULL UNSIGNED,
 	hourlyWage SMALLINT NOT NULL UNSIGNED,
-	phoneNumber CHAR(12),
+	phoneNumber CHAR(9),
 	address VARCHAR(255) NOT NULL,
     CHECK (taxBracket in (0.10,0.12,0.22,0.24,0.32,0.35,0.37)),
 	PRIMARY KEY (employeeID)
