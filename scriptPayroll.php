@@ -1,76 +1,80 @@
+<html> 
+    <h3><p><a href="http://localhost/main_page.html">Main Page</a></p></h3>
+</html>
+
+<!-- PHP code to establish connection with the localserver -->
 <?php
-    $servername = "localhost";
-    $username = "username";
-    $password = "password";
+ 
+//login
+$user = 'gavin';
+$password = '';
+ 
+// Database name
+$database = 'payrollgo';
+ 
+// Server is localhost with
+// port number 3306
+$servername='localhost:3306';
+$mysqli = new mysqli($servername, $user,
+                $password, $database);
+ 
+// Checking for connections
+if ($mysqli->connect_error) {
+    die('Connect Error (' .
+    $mysqli->connect_errno . ') '.
+    $mysqli->connect_error);
+}
+ 
+// SQL query to select data from database
+$sql = " SELECT * FROM employee ORDER BY employeeID ASC ";
+$result = $mysqli->query($sql);
 
-    try {
-        $conn = new PDO("mysql:host=$servername;dbname=myDB", $username, $password);
-        // set the PDO error mode to exception
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        echo "Connected successfully";
+// create arrays for calculations.
+$hoursWorked = array();
+$hourlyWage = array();
+$taxBracket = array();
+$balance = array();
+while($rows=$result->fetch_assoc()) {
+    array_push($hoursWorked, $rows['hoursWorked']);
+    array_push($hourlyWage, $rows['hourlyWage']);
+    array_push($taxBracket, $rows['taxBracket']);
+    array_push($balance, $rows['balance']);
+}
+$arrayLength = count($hoursWorked);
+$payNet = array();
+$payGross = array();
+$newBalance = array();
 
-        echo "Starting payroll sequence";
-        
-        //formulas --- $ = new php variable, # = from sql column
-        //$payGross = #hoursWorked * #hourlyWage
-        //$payDeduction = $payGross * #taxBracket
-        //$payEarned = $payGross - $payDeduction
-        
-        //create an array of hoursWorked from database
-        $hoursWorked = array();
-        $sql = "SELECT hoursWorked FROM employee";
-        mysql_select_db('PayRollGo');
-        $returnVal = mysql_query($sql, $conn);
-        if(! $returnVal ) {
-            die('Could not get data: ' . mysql_error());
-        }
-        
-        while($row = mysql_fetch_array($retval, MYSQL_ASSOC)) {
-            array_push($hoursWorked, $row);
-        }
+//calculate gross pays of employees
+for ($i = 0; $i < $arrayLength; $i++) {
+    $payGross[$i] = $hoursWorked[$i] * $hourlyWage[$i];
+}
 
-        //test if array works by printing
-        foreach ($hoursWorked as $val) {
-            echo "$val, ";
-        }
+//calculate net pays of employees
+for ($i = 0; $i < $arrayLength; $i++) {
+    $payNet[$i] = $payGross[$i] - ( $payGross[$i] * $taxBracket[$i] );
+}
 
+//calculate new balance to be updated in database
+for ($i = 0; $i < $arrayLength; $i++) {
+    $newBalance[$i] = $balance[$i] + $payNet[$i];
+}
 
-        //create an array of hourlyWage from database
-/*
-        $hourlyWage = array();
-        $sql = "SELECT hourlyWage FROM employee";
-        mysql_select_db('PayRollGo');
-        $returnVal = mysql_query($sql, $conn);
-        if(! $returnVal ) {
-            die('Could not get data: ' . mysql_error());
-        }
-        
-        while($row = mysql_fetch_array($retval, MYSQL_ASSOC)) {
-            array_push($hourlyWage, $row);
-        }
-*/
+//create sql statement to update employee balances and execute
+for ($i = 0; $i < $arrayLength; $i++) {
+    $sql = "UPDATE employee SET balance = ";
+    $sql .= $newBalance[$i];
+    $sql .= " WHERE employeeID = ";
+    $sql .= $i+1;
+    $mysqli->query($sql);
+}
 
-        //create an array of hourlyWage from database
-/*
-        $taxBracket = array();
-        $sql = "SELECT taxBracket FROM employee";
-        mysql_select_db('PayRollGo');
-        $returnVal = mysql_query($sql, $conn);
-        if(! $returnVal ) {
-            die('Could not get data: ' . mysql_error());
-        }
-        
-        while($row = mysql_fetch_array($retval, MYSQL_ASSOC)) {
-            array_push($taxBracket, $row);
-        }
-*/
+//create sql statement to update employee hours worked back to 0 and execute
+for ($i = 0; $i < $arrayLength; $i++) {
+    $sql = "UPDATE employee SET hoursWorked = 0";
+    $mysqli->query($sql);
+}
 
+echo "Balances updated.";
 
-
-
-
-        mysql_close($conn);
-    } catch(PDOException $e) {
-        echo "Connection failed: " . $e->getMessage();
-    }
 ?>
